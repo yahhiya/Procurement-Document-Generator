@@ -1,0 +1,8 @@
+# Core Requirements
+streamlit
+python-docx
+
+# Optional UI Enhancements
+pandas
+streamlit-option-menu
+Pillow
