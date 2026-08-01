@@ -1,8 +1,13 @@
 # Core Requirements
 streamlit
 python-docx
+anthropic
+docxtpl
+pydantic
+python-dotenv
 
 # Optional UI Enhancements
 pandas
 streamlit-option-menu
-Pillow
+
+#pip install -r requirements.txt
