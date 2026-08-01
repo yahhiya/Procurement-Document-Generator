@@ -97,4 +97,5 @@ Future iterations will introduce support for additional procurement document tem
 
 ## Author
 **Yahhiya Khawaja**
+
 Developed as part of an enterprise case study project in collaboration with **SOLGulf**.
