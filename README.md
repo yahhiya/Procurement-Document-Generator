@@ -23,8 +23,6 @@ flowchart LR
 
 ```
 
----
-
 ## Features
 
 * Upload procurement requirements documents (`.DOCX` or `.TXT`)
@@ -34,8 +32,6 @@ flowchart LR
 * Automatically generate Microsoft Word procurement documents
 * Download completed documents in `.DOCX` format
 * Support for centrally stored and approved document templates
-
----
 
 ## Technology Stack
 
@@ -50,8 +46,6 @@ flowchart LR
 | **Version Control** | Git & GitHub |
 
 The frontend and backend are being developed as separate components, with the React application providing the user interface and the Python backend handling document processing, information extraction, and document generation.
-
----
 
 ## Project Structure
 
@@ -85,9 +79,7 @@ SOLGulf-Procurement-Generator/
 
 ```
 
-> The current Streamlit implementation is retained as an earlier prototype while the production-oriented React frontend is developed.
-
----
+The current Streamlit implementation is retained as an earlier prototype while the production-oriented React frontend is developed.
 
 ## Current Status
 
@@ -112,8 +104,6 @@ This project is currently under active development.
 
 Future iterations will introduce support for additional procurement document templates and further enhancements to the information extraction process.
 
----
-
 ## Planned Improvements
 
 * Support multiple procurement document templates
@@ -123,8 +113,6 @@ Future iterations will introduce support for additional procurement document tem
 * Integration between React frontend and Python backend
 * Expanded document generation capabilities
 * Authentication and user permissions
-
----
 
 ## Author
 
