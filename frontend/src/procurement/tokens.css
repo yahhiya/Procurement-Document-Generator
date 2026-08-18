@@ -1,0 +1,77 @@
+/* ==========================================================================
+   SolGulf Procurement — Design Tokens
+   A small, deliberate token set. Everything in the app derives from this
+   file — change a value here and it propagates everywhere.
+   ========================================================================== */
+
+:root {
+  /* ---- Brand ---- */
+  --sg-navy-900: #0a2540;   /* primary text, headers, primary buttons   */
+  --sg-navy-700: #163a5c;   /* hover state for navy surfaces            */
+  --sg-teal-600: #0c8fa3;   /* brand accent — links, active states      */
+  --sg-teal-500: #12a7bd;   /* logo mark, active step ring              */
+  --sg-teal-050: #e7f6f8;   /* tinted accent backgrounds                */
+
+  /* ---- Status ---- */
+  --sg-success-600: #1c9a6c;
+  --sg-success-050: #e7f7ef;
+  --sg-amber-700: #9a6412;
+  --sg-amber-600: #b7791f;
+  --sg-amber-050: #fbf1de;
+  --sg-danger-600: #c0362c;
+  --sg-danger-050: #fbeceb;
+
+  /* ---- Neutrals ---- */
+  --sg-ink-900: #101828;
+  --sg-ink-700: #344054;
+  --sg-ink-500: #667085;
+  --sg-ink-300: #d0d5dd;
+  --sg-ink-200: #e4e7ec;
+  --sg-ink-100: #eef1f5;
+  --sg-ink-050: #f6f8fa;
+  --sg-white: #ffffff;
+
+  --sg-bg: #f4f6f9;
+  --sg-surface: #ffffff;
+  --sg-border: #e2e6ec;
+
+  /* ---- Type ---- */
+  --sg-font-ui: "IBM Plex Sans", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --sg-font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, Menlo,
+    monospace;
+
+  --sg-text-xs: 0.75rem;    /* 12px — captions, meta      */
+  --sg-text-sm: 0.8125rem;  /* 13px — labels, helper text */
+  --sg-text-base: 0.9375rem;/* 15px — body                */
+  --sg-text-md: 1.0625rem;  /* 17px — field values        */
+  --sg-text-lg: 1.375rem;   /* 22px — step titles         */
+  --sg-text-xl: 1.75rem;    /* 28px — page title          */
+
+  /* ---- Spacing (4px base) ---- */
+  --sg-space-1: 4px;
+  --sg-space-2: 8px;
+  --sg-space-3: 12px;
+  --sg-space-4: 16px;
+  --sg-space-5: 20px;
+  --sg-space-6: 24px;
+  --sg-space-7: 28px;
+  --sg-space-8: 32px;
+  --sg-space-10: 40px;
+  --sg-space-12: 48px;
+
+  /* ---- Shape ---- */
+  --sg-radius-sm: 6px;
+  --sg-radius-md: 10px;
+  --sg-radius-lg: 14px;
+  --sg-radius-pill: 999px;
+
+  /* ---- Elevation ---- */
+  --sg-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --sg-shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --sg-shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.12);
+
+  /* ---- Motion ---- */
+  --sg-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --sg-duration: 160ms;
+}
