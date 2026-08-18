@@ -1,55 +1,70 @@
 # SOLGulf Procurement Document Generator
+
 An automated procurement document generation system developed for **SOLGulf** to streamline the creation of procurement documents by extracting information from requirements documents and populating approved Microsoft Word templates.
 
 ---
 
 ## Project Overview
-This application processes a requirements document (`.DOCX` or `.TXT`), extracts the required procurement information, and automatically generates a completed Microsoft Word (`.DOCX`) document using an approved document template.
 
-The first iteration focuses on generating a **Master Services Agreement (MSA)**. However, the architecture has been designed so that additional procurement document templates can be supported in future iterations.
+This application processes a procurement requirements document (`.DOCX` or `.TXT`), extracts the required procurement information, and generates a completed Microsoft Word (`.DOCX`) document using an approved document template.
+
+The first iteration focuses on generating a **Master Services Agreement (MSA)**. The architecture has been designed to support additional procurement document templates in future iterations.
 
 ### Workflow
+
 ```mermaid
 flowchart LR
     A["Requirements Document<br/>(.DOCX / .TXT)"]
-    --> B["Information Extraction (LLM)"]
+    --> B["Information Extraction<br/>(LLM)"]
     --> C["Human Review & Validation"]
     --> D["Document Generation"]
-    --> E["Generated Procurement Document<br/>(.DOCX)"]
+    --> E["Generated Procurement<br/>Document (.DOCX)"]
 ```
 
 ---
 
 ## Features
+
 - Upload procurement requirements documents (`.DOCX` or `.TXT`)
 - Extract key procurement information from structured or unstructured text using an LLM
 - Human review step to confirm or correct extracted information before generation
 - Map validated information to document placeholders
 - Automatically generate Microsoft Word procurement documents
 - Download completed documents in `.DOCX` format
+- Support for centrally stored and approved document templates
 
 ---
 
 ## Technology Stack
+
 | Component | Technology |
-|-----------|------------|
-| Programming Language | Python |
-| User Interface | Streamlit |
-| Document Reading | python-docx |
-| Document Generation | docxtpl |
+|---|---|
+| Frontend | React + Vite |
+| Backend / Document Processing | Python |
+| Document Reading | `python-docx` |
+| Document Generation | `docxtpl` |
 | Information Extraction (LLM) | Google Gemini API |
-| Data Validation | pydantic |
+| Data Validation | Pydantic |
 | Version Control | Git & GitHub |
+
+The frontend and backend are being developed as separate components, with the React application providing the user interface and the Python backend handling document processing, information extraction, validation, and document generation.
 
 ---
 
 ## Project Structure
+
 ```text
 SOLGulf-Procurement-Generator/
 │
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.js
+│
 ├── app.py
 ├── requirements.txt
-├── .env                  (not committed — holds API key)
+├── .env                  # Not committed — holds API key
 ├── .gitignore
 │
 ├── templates/
@@ -67,35 +82,49 @@ SOLGulf-Procurement-Generator/
 └── README.md
 ```
 
+The current Streamlit implementation is retained as an earlier prototype while the production-oriented React frontend is being developed.
+
 ---
 
 ## Current Status
+
 This project is currently under active development.
 
-**Completed so far:**
-- Development environment set up (Python, Streamlit, Gemini API)
-- Architecture design finalised and reviewed with stakeholder
+### Completed
 
-**In progress:**
-- Requirements document upload
+- Development environment set up
+- Initial system architecture designed and reviewed with stakeholders
+- Initial procurement document generation workflow defined
+- UI workflow and mockups developed
+- React + Vite frontend environment established
+
+### In Progress
+
+- React frontend implementation
+- Requirements document upload interface
 - LLM-based information extraction
-- Human review interface
-- Document generation via template
+- Human review and validation interface
+- Document generation workflow
+- Integration between the React frontend and Python processing layer
 
 Future iterations will introduce support for additional procurement document templates and further enhancements to the information extraction process.
 
 ---
 
 ## Planned Improvements
+
 - Support multiple procurement document templates
+- Centrally manage approved document templates
 - Improve information extraction accuracy
-- Additional document validation
-- Enhanced user interface
-- Expanded document generation capabilities
+- Add additional document validation
+- Complete React frontend and Python backend integration
+- Expand document generation capabilities
+- Introduce authentication and user permissions
 
 ---
 
 ## Author
+
 **Yahhiya Khawaja**
 
 Developed as part of an enterprise case study project in collaboration with **SOLGulf**.
