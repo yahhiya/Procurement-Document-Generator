@@ -50,19 +50,25 @@ function ProcurementWizard() {
   useEffect(() => {
     let cancelled = false;
     setTemplatesStatus("loading");
+
     templatesApi
       .listTemplates(token)
       .then((data) => {
         if (cancelled) return;
+
         setTemplates(data.templates);
-        setSelectedTemplateId((current) => current ?? data.templates[0]?.id ?? null);
+        setSelectedTemplateId(
+          (current) => current ?? data.templates[0]?.id ?? null
+        );
         setTemplatesStatus("ready");
       })
       .catch((err) => {
         if (cancelled) return;
+
         setTemplatesError(err.message);
         setTemplatesStatus("error");
       });
+
     return () => {
       cancelled = true;
     };
@@ -70,7 +76,9 @@ function ProcurementWizard() {
 
   useEffect(() => {
     return () => {
-      if (cosmeticTimerRef.current) clearInterval(cosmeticTimerRef.current);
+      if (cosmeticTimerRef.current) {
+        clearInterval(cosmeticTimerRef.current);
+      }
     };
   }, []);
 
@@ -79,12 +87,19 @@ function ProcurementWizard() {
     setIsGenerating(true);
     setGenerateError(null);
     setGeneratedFile(null);
+
     try {
       const { blob, filename } = await documentsApi.generateDocument(token, {
         templateId: selectedTemplateId,
         values,
       });
-      setGeneratedFile({ blob, name: filename, size: blob.size });
+
+      setGeneratedFile({
+        blob,
+        name: filename,
+        size: blob.size,
+      });
+
       setIsGenerating(false);
     } catch (err) {
       setGenerateError(err.message);
@@ -94,18 +109,23 @@ function ProcurementWizard() {
 
   const handleDownload = () => {
     if (!generatedFile) return;
+
     const url = URL.createObjectURL(generatedFile.blob);
     const a = document.createElement("a");
+
     a.href = url;
     a.download = generatedFile.name;
+
     document.body.appendChild(a);
     a.click();
     a.remove();
+
     URL.revokeObjectURL(url);
   };
 
   const handleFileSelect = async (selectedFile) => {
     const myToken = ++extractionTokenRef.current;
+
     setFile(selectedFile);
     setExtractError(null);
     setFields([]);
@@ -119,40 +139,59 @@ function ProcurementWizard() {
     setIsAnalysing(true);
     setCompletedSteps(0);
 
-    // Cosmetic checklist progress while the real request is in flight — it
-    // advances up to (but not including) the last step and holds there;
+    // Cosmetic checklist progress while the real request is in flight.
+    // It advances up to (but does not include) the last step and holds there;
     // the real response is what actually marks the flow complete.
     let i = 0;
+
     cosmeticTimerRef.current = setInterval(() => {
       i = Math.min(i + 1, ANALYSIS_STEPS.length - 1);
-      if (extractionTokenRef.current === myToken) setCompletedSteps(i);
+
+      if (extractionTokenRef.current === myToken) {
+        setCompletedSteps(i);
+      }
     }, 700);
 
     try {
       const base64 = await fileToBase64(selectedFile);
+
       const data = await documentsApi.extractDocument(token, {
         templateId: selectedTemplateId,
         filename: selectedFile.name,
         fileBase64: base64,
       });
 
-      if (extractionTokenRef.current !== myToken) return; // stale — ignore
+      if (extractionTokenRef.current !== myToken) return;
+
       clearInterval(cosmeticTimerRef.current);
+
       setFields(data.fields);
-      setValues(Object.fromEntries(data.fields.map((f) => [f.key, f.value ?? ""])));
+
+      setValues(
+        Object.fromEntries(
+          data.fields.map((f) => [f.key, f.value ?? ""])
+        )
+      );
+
       setCompletedSteps(ANALYSIS_STEPS.length);
       setIsAnalysing(false);
     } catch (err) {
-      if (extractionTokenRef.current !== myToken) return; // stale — ignore
+      if (extractionTokenRef.current !== myToken) return;
+
       clearInterval(cosmeticTimerRef.current);
+
       setIsAnalysing(false);
       setExtractError(err.message);
     }
   };
 
   const clearFile = () => {
-    extractionTokenRef.current += 1; // invalidate any in-flight extraction
-    if (cosmeticTimerRef.current) clearInterval(cosmeticTimerRef.current);
+    extractionTokenRef.current += 1;
+
+    if (cosmeticTimerRef.current) {
+      clearInterval(cosmeticTimerRef.current);
+    }
+
     setFile(null);
     setIsAnalysing(false);
     setCompletedSteps(0);
@@ -163,7 +202,11 @@ function ProcurementWizard() {
 
   const resetAll = () => {
     extractionTokenRef.current += 1;
-    if (cosmeticTimerRef.current) clearInterval(cosmeticTimerRef.current);
+
+    if (cosmeticTimerRef.current) {
+      clearInterval(cosmeticTimerRef.current);
+    }
+
     setStep("upload");
     setSelectedTemplateId(templates[0]?.id ?? null);
     setFile(null);
@@ -177,7 +220,8 @@ function ProcurementWizard() {
     setGeneratedFile(null);
   };
 
-  const selectedTemplate = templates.find((t) => t.id === selectedTemplateId) || null;
+  const selectedTemplate =
+    templates.find((t) => t.id === selectedTemplateId) || null;
 
   const statusByStep = {
     upload: file
@@ -187,17 +231,36 @@ function ProcurementWizard() {
         ? "Analysing document…"
         : "Analysis complete"
       : "Awaiting upload",
+
     review: "Reviewing extracted fields",
-    generate: generateError ? "Couldn't generate document" : isGenerating ? "Generating document…" : "Document ready",
+
+    generate: generateError
+      ? "Couldn't generate document"
+      : isGenerating
+      ? "Generating document…"
+      : "Document ready",
   };
 
   return (
     <main className="sg-main">
-      <p className="sg-eyebrow">Step {["upload", "review", "generate"].indexOf(step) + 1} of 3</p>
+      <p className="sg-eyebrow">
+        Step {["upload", "review", "generate"].indexOf(step) + 1} of 3
+      </p>
+
       <h1 className="sg-title">
-        {step === "upload" && (file ? "Analysing Requirements Document" : "Upload Requirements & Select Template")}
+        {step === "upload" &&
+          (file
+            ? "Analysing Requirements Document"
+            : "Upload Requirements & Select Template")}
+
         {step === "review" && "Review Extracted Fields"}
-        {step === "generate" && (isGenerating ? "Generating Document" : generateError ? "Generation Failed" : "Document Ready")}
+
+        {step === "generate" &&
+          (isGenerating
+            ? "Generating Document"
+            : generateError
+            ? "Generation Failed"
+            : "Document Ready")}
       </h1>
 
       <div className="sg-layout">
@@ -225,7 +288,12 @@ function ProcurementWizard() {
             <ReviewStep
               fields={fields}
               values={values}
-              onChange={(key, value) => setValues((v) => ({ ...v, [key]: value }))}
+              onChange={(key, value) =>
+                setValues((v) => ({
+                  ...v,
+                  [key]: value,
+                }))
+              }
               onBack={() => setStep("upload")}
               onGenerate={handleGenerate}
             />
@@ -255,13 +323,26 @@ function ProcurementWizard() {
 
 function UserChip() {
   const { user, logout } = useAuth();
+
   return (
     <div className="sg-user-chip">
       <span className="sg-user-email">{user.email}</span>
-      <span className={`sg-badge ${user.role === "admin" ? "sg-badge-success" : "sg-badge-neutral"}`}>
+
+      <span
+        className={`sg-badge ${
+          user.role === "admin"
+            ? "sg-badge-success"
+            : "sg-badge-neutral"
+        }`}
+      >
         {user.role === "admin" ? "Admin" : "User"}
       </span>
-      <button type="button" className="sg-btn sg-btn-ghost" onClick={logout}>
+
+      <button
+        type="button"
+        className="sg-btn sg-btn-ghost"
+        onClick={logout}
+      >
         Sign out
       </button>
     </div>
@@ -270,49 +351,66 @@ function UserChip() {
 
 function AppShell() {
   const { status, user } = useAuth();
-  const [view, setView] = useState("documents"); // "documents" | "admin-users" | "admin-templates"
+  const [view, setView] = useState("documents");
+  // "documents" | "admin-users" | "admin-templates"
 
-  // The nav tabs are admin-only for two of the three views. If someone
-  // signs out of an admin account while on "Manage Templates" and a
-  // different, non-admin user signs in in the same tab, `view` would still
-  // point at an admin-only screen that user can't see — and nothing would
-  // render. Reset to "documents" on every new login so that can't happen.
+  // Reset to documents on every new login so an admin-only screen
+  // cannot remain selected when a different user signs in.
   useEffect(() => {
-    if (user) setView("documents");
+    if (user) {
+      setView("documents");
+    }
   }, [user?.id]);
 
-  // Extra safety net: if `view` is ever something this user isn't allowed
-  // to see (belt-and-braces alongside the effect above), fall back to
-  // "documents" rather than rendering nothing.
-  const isAdminView = view === "admin-users" || view === "admin-templates";
-  const effectiveView = isAdminView && user?.role !== "admin" ? "documents" : view;
+  // Extra safety net: if the selected view is admin-only and the
+  // current user isn't an admin, fall back to documents.
+  const isAdminView =
+    view === "admin-users" || view === "admin-templates";
+
+  const effectiveView =
+    isAdminView && user?.role !== "admin"
+      ? "documents"
+      : view;
 
   return (
     <div className="sg-app">
       <header className="sg-header">
         <Logo />
+
         {status === "authenticated" && (
           <nav className="sg-nav-tabs" aria-label="Sections">
             <button
               type="button"
-              className={`sg-nav-tab ${effectiveView === "documents" ? "is-active" : ""}`}
+              className={`sg-nav-tab ${
+                effectiveView === "documents" ? "is-active" : ""
+              }`}
               onClick={() => setView("documents")}
             >
               Documents
             </button>
+
             {user.role === "admin" && (
               <button
                 type="button"
-                className={`sg-nav-tab ${effectiveView === "admin-templates" ? "is-active" : ""}`}
+                className={`sg-nav-tab ${
+                  effectiveView === "admin-templates"
+                    ? "is-active"
+                    : ""
+                }`}
                 onClick={() => setView("admin-templates")}
               >
                 Manage Templates
               </button>
             )}
+
             {user.role === "admin" && (
               <button
                 type="button"
-                className={`sg-nav-tab ${effectiveView === "admin-users" ? "is-active" : ""}`}
+                className={`sg-nav-tab ${
+                  effectiveView === "admin-users"
+                    ? "is-active"
+                    : ""
+                }`}
                 onClick={() => setView("admin-users")}
               >
                 Manage Users
@@ -320,10 +418,13 @@ function AppShell() {
             )}
           </nav>
         )}
+
         {status === "authenticated" ? (
           <UserChip />
         ) : (
-          <span className="sg-header-meta">Procurement Document Generator</span>
+          <span className="sg-header-meta">
+            Procurement Document Generator
+          </span>
         )}
       </header>
 
@@ -332,10 +433,22 @@ function AppShell() {
           <p className="sg-subtitle">Loading…</p>
         </main>
       )}
+
       {status === "anonymous" && <LoginPage />}
-      {status === "authenticated" && effectiveView === "documents" && <ProcurementWizard />}
-      {status === "authenticated" && effectiveView === "admin-users" && <AdminUsersPage />}
-      {status === "authenticated" && effectiveView === "admin-templates" && <AdminTemplatesPage />}
+
+      {status === "authenticated" &&
+        effectiveView === "documents" && <ProcurementWizard />}
+
+      {status === "authenticated" &&
+        effectiveView === "admin-users" && <AdminUsersPage />}
+
+      {status === "authenticated" &&
+        effectiveView === "admin-templates" && (
+          <AdminTemplatesPage />
+        )}
+    </div>
+  );
+}
 
 export default function ProcurementApp() {
   return (
