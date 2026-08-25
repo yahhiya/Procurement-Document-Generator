@@ -132,3 +132,5 @@ This project is currently under active development.
 **Yahhiya Khawaja**
 
 A software project exploring the use of **LLMs, document processing, and workflow automation** to streamline procurement document generation.
+
+Deployment Trigger
