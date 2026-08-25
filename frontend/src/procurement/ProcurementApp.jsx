@@ -337,11 +337,6 @@ function AppShell() {
       {status === "authenticated" && effectiveView === "admin-users" && <AdminUsersPage />}
       {status === "authenticated" && effectiveView === "admin-templates" && <AdminTemplatesPage />}
 
-      <footer className="sg-footer">Built by Yahhiya Khawaja for SOLGulf</footer>
-    </div>
-  );
-}
-
 export default function ProcurementApp() {
   return (
     <AuthProvider>

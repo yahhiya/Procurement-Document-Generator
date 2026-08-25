@@ -1,11 +1,10 @@
-import logo from "../assets/solgulf-logo.png";
-
 export default function Logo({ className = "" }) {
   return (
-    <img
-      src={logo}
-      alt="SOLGulf"
-      className={`sg-logo-img ${className}`}
-    />
+    <span
+      className={className}
+      style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--sg-navy-900)" }}
+    >
+      Procurement Document Generator
+    </span>
   );
 }
