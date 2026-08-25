@@ -7,33 +7,45 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  // "loading" | "authenticated" | "anonymous"
   const [status, setStatus] = useState("loading");
 
-  // On first load, see if a token was saved from a previous session and
-  // check it's still valid before trusting it.
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) {
+    const cleanToken = saved?.trim();
+
+    if (!cleanToken) {
+      localStorage.removeItem(STORAGE_KEY);
       setStatus("anonymous");
       return;
     }
+
     authApi
-      .me(saved)
+      .me(cleanToken)
       .then((data) => {
-        setToken(saved);
+        setToken(cleanToken);
         setUser(data.user);
+        localStorage.setItem(STORAGE_KEY, cleanToken);
         setStatus("authenticated");
       })
       .catch(() => {
         localStorage.removeItem(STORAGE_KEY);
+        setToken(null);
+        setUser(null);
         setStatus("anonymous");
       });
   }, []);
 
   const handleAuthResponse = (data) => {
-    localStorage.setItem(STORAGE_KEY, data.token);
-    setToken(data.token);
+    const cleanToken = (data.token || "").trim();
+
+    if (!cleanToken) {
+      throw new Error(
+        "Login succeeded but no authentication token was returned."
+      );
+    }
+
+    localStorage.setItem(STORAGE_KEY, cleanToken);
+    setToken(cleanToken);
     setUser(data.user);
     setStatus("authenticated");
   };
@@ -56,7 +68,16 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, status, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        status,
+        login,
+        register,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -64,6 +85,10 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
+
+  if (!ctx) {
+    throw new Error("useAuth must be used inside <AuthProvider>");
+  }
+
   return ctx;
 }
