@@ -27,7 +27,7 @@ export async function generateDocument(token, { templateId, values }) {
     });
   } catch (err) {
     throw new Error(
-      "Can't reach the backend. Is it running? (python app.py in /solgulf-backend)"
+      "Can't reach the backend. Is it running? (python app.py in /backend)"
     );
   }
 

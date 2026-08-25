@@ -1,6 +1,6 @@
 # Deploying the frontend (Vercel)
 
-1. Deploy the backend first (see solgulf-backend/README.md) — you need its
+1. Deploy the backend first (see backend/README.md) — you need its
    real URL before this step.
 2. Push this code to GitHub (already set up).
 3. Go to [vercel.com](https://vercel.com), sign up/in with GitHub, click

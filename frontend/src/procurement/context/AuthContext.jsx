@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import * as authApi from "../api/authApi";
 
-const STORAGE_KEY = "solgulf_token";
+const STORAGE_KEY = "procurement_token";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {

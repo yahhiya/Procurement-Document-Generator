@@ -1,4 +1,4 @@
-// Talks to the Python backend in /solgulf-backend (see that folder's README
+// Talks to the Python backend in /backend (see that folder's README
 // to run it). For local development this defaults to localhost:8000. For a
 // deployed build, set VITE_API_BASE in your hosting platform's environment
 // variables (e.g. Vercel) to your deployed backend's real URL — nothing
@@ -18,7 +18,7 @@ export async function request(path, options = {}) {
     });
   } catch (err) {
     throw new Error(
-      "Can't reach the backend. Is it running? (python app.py in /solgulf-backend)"
+      "Can't reach the backend. Is it running? (python app.py in /backend)"
     );
   }
 
