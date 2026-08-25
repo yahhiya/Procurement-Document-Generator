@@ -55,7 +55,7 @@ flowchart LR
 | Data Validation               | Pydantic          |
 | Version Control               | Git & GitHub      |
 
-The frontend and backend are being developed as separate components, with the React application providing the user interface and the Python backend handling document processing, information extraction, validation, template management, and document generation.
+The frontend and backend are developed as separate components, with the React application providing the user interface and the Python backend handling document processing, information extraction, validation, template management, and document generation.
 
 ---
 
@@ -74,18 +74,10 @@ Procurement-Document-Generator/
 │   ├── ...
 │   └── ...
 │
-├── requirements.txt
-├── .env                  # Not committed — holds API key
+├── sample_templates/
+│   └── ...
+│
 ├── .gitignore
-│
-├── templates/
-│   └── ...
-│
-├── docs/
-│   └── ...
-│
-├── generated/
-│   └── (output documents)
 │
 └── README.md
 ```
