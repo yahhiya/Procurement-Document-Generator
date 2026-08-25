@@ -1,6 +1,6 @@
-# SOLGulf Procurement Document Generator
+# Procurement Document Generator
 
-An automated procurement document generation system developed for **SOLGulf** to streamline the creation of procurement documents by extracting information from requirements documents and populating approved Microsoft Word templates.
+An automated procurement document generation system designed to streamline the creation of procurement documents by extracting information from requirements documents and populating approved Microsoft Word templates.
 
 ---
 
@@ -8,53 +8,61 @@ An automated procurement document generation system developed for **SOLGulf** to
 
 This application processes a procurement requirements document (`.DOCX` or `.TXT`), extracts the required procurement information, and generates a completed Microsoft Word (`.DOCX`) document using an approved document template.
 
-The first iteration focuses on generating a **Master Services Agreement (MSA)**. The architecture has been designed to support additional procurement document templates in future iterations.
+The system supports multiple procurement document templates, allowing the same workflow to be used for different document types while maintaining consistent formatting and structure.
 
 ### Workflow
 
 ```mermaid
 flowchart LR
-    A["Requirements Document<br/>(.DOCX / .TXT)"]
-    --> B["Information Extraction<br/>(LLM)"]
-    --> C["Human Review & Validation"]
-    --> D["Document Generation"]
-    --> E["Generated Procurement<br/>Document (.DOCX)"]
+    A["Select Document Template"]
+    --> B["Upload Requirements Document<br/>(.DOCX / .TXT)"]
+    --> C["Information Extraction<br/>(LLM)"]
+    --> D["Human Review & Validation"]
+    --> E["Document Generation"]
+    --> F["Generated Procurement<br/>Document (.DOCX)"]
 ```
 
 ---
 
 ## Features
 
-- Upload procurement requirements documents (`.DOCX` or `.TXT`)
-- Extract key procurement information from structured or unstructured text using an LLM
-- Human review step to confirm or correct extracted information before generation
-- Map validated information to document placeholders
-- Automatically generate Microsoft Word procurement documents
-- Download completed documents in `.DOCX` format
-- Support for centrally stored and approved document templates
+* Select from multiple procurement document templates
+* Upload procurement requirements documents (`.DOCX` or `.TXT`)
+* Extract key procurement information from structured or unstructured text using an LLM
+* Human review step to confirm or correct extracted information before generation
+* Map validated information to document placeholders
+* Automatically generate Microsoft Word procurement documents
+* Download completed documents in `.DOCX` format
+* Support for centrally stored and approved document templates
+* Admin and normal user accounts
+* Admins can add and manage users
+* Admins can add new document templates
+* Automatically generate template placeholders using Gemini
+* Manually review and edit generated placeholders before approving a template
+* Approved templates are stored and made available to users
 
 ---
 
 ## Technology Stack
 
-| Component | Technology |
-|---|---|
-| Frontend | React + Vite |
-| Backend / Document Processing | Python |
-| Document Reading | `python-docx` |
-| Document Generation | `docxtpl` |
-| Information Extraction (LLM) | Google Gemini API |
-| Data Validation | Pydantic |
-| Version Control | Git & GitHub |
+| Component                     | Technology        |
+| ----------------------------- | ----------------- |
+| Frontend                      | React + Vite      |
+| Backend / Document Processing | Python            |
+| Document Reading              | `python-docx`     |
+| Document Generation           | `docxtpl`         |
+| Information Extraction (LLM)  | Google Gemini API |
+| Data Validation               | Pydantic          |
+| Version Control               | Git & GitHub      |
 
-The frontend and backend are being developed as separate components, with the React application providing the user interface and the Python backend handling document processing, information extraction, validation, and document generation.
+The frontend and backend are being developed as separate components, with the React application providing the user interface and the Python backend handling document processing, information extraction, validation, template management, and document generation.
 
 ---
 
 ## Project Structure
 
 ```text
-SOLGulf-Procurement-Generator/
+Procurement-Document-Generator/
 │
 ├── frontend/
 │   ├── src/
@@ -62,27 +70,27 @@ SOLGulf-Procurement-Generator/
 │   ├── package.json
 │   └── vite.config.js
 │
-├── app.py
+├── backend/
+│   ├── ...
+│   └── ...
+│
 ├── requirements.txt
 ├── .env                  # Not committed — holds API key
 ├── .gitignore
 │
 ├── templates/
-│   └── master_services_agreement.docx
+│   └── ...
 │
 ├── docs/
-│   └── SOLGulf_Procurement_Document_Generation_System.pdf
+│   └── ...
 │
 ├── generated/
 │   └── (output documents)
 │
-├── assets/
-│   └── solgulf_logo.png
-│
 └── README.md
 ```
 
-The current Streamlit implementation is retained as an earlier prototype while the production-oriented React frontend is being developed.
+Sensitive configuration such as API keys is stored using environment variables and is not committed to the repository.
 
 ---
 
@@ -92,34 +100,38 @@ This project is currently under active development.
 
 ### Completed
 
-- Development environment set up
-- Initial system architecture designed and reviewed with stakeholders
-- Initial procurement document generation workflow defined
-- UI workflow and mockups developed
-- React + Vite frontend environment established
+* Development environment set up
+* Initial system architecture designed
+* Initial procurement document generation workflow defined
+* UI workflow and mockups developed
+* React + Vite frontend environment established
+* Multiple procurement document templates supported
+* Admin and normal user accounts implemented
+* Admin user management implemented
+* Admin template management implemented
+* Automatic template placeholder generation using Gemini implemented
+* Manual placeholder review and editing implemented
+* Approved templates stored and made available to users
+* Requirements document upload interface implemented
+* LLM-based information extraction implemented
+* Human review and validation interface implemented
+* Document generation workflow implemented
+* Integration between the React frontend and Python processing layer implemented
 
 ### In Progress
 
-- React frontend implementation
-- Requirements document upload interface
-- LLM-based information extraction
-- Human review and validation interface
-- Document generation workflow
-- Integration between the React frontend and Python processing layer
-
-Future iterations will introduce support for additional procurement document templates and further enhancements to the information extraction process.
+* Improving information extraction accuracy
+* Improving error handling and user feedback
+* Further improving the user interface and overall workflow
 
 ---
 
 ## Planned Improvements
 
-- Support multiple procurement document templates
-- Centrally manage approved document templates
-- Improve information extraction accuracy
-- Add additional document validation
-- Complete React frontend and Python backend integration
-- Expand document generation capabilities
-- Introduce authentication and user permissions
+* Add automated testing
+* Improve system monitoring
+* Expand document generation capabilities
+* Further improve the user interface and overall workflow
 
 ---
 
@@ -127,4 +139,4 @@ Future iterations will introduce support for additional procurement document tem
 
 **Yahhiya Khawaja**
 
-Developed as part of an enterprise case study project in collaboration with **SOLGulf**.
+A software project exploring the use of **LLMs, document processing, and workflow automation** to streamline procurement document generation.
