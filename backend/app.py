@@ -772,7 +772,6 @@ def load_dotenv():
 def main():
     load_dotenv()
     db.init_db()
-    templates_store.seed_initial_template_if_empty()
     port = int(os.environ.get("PORT", 8000))
 
     if not os.environ.get("SECRET_KEY"):
