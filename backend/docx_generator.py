@@ -75,8 +75,17 @@ def _rebuild_paragraph(paragraph_xml: str, new_text: str) -> str:
 
 
 def _replace_in_xml(xml_text: str, placeholder_map: dict, occurrence_counts: dict) -> str:
-    # Sort placeholders by length descending to prevent partial replacements of overlapping keys
-    sorted_placeholders = sorted(placeholder_map.keys(), key=len, reverse=True)
+    # Normalize keys so that whether they have curly braces or UI field names, they match template tokens
+    normalized_map = {}
+    for k, v in placeholder_map.items():
+        if not k.startswith("{{"):
+            formatted_key = "{{" + k.strip().lower().replace(" ", "_") + "}}"
+        else:
+            formatted_key = k
+        normalized_map[formatted_key] = v
+        occurrence_counts[formatted_key] = 0
+
+    sorted_placeholders = sorted(normalized_map.keys(), key=len, reverse=True)
 
     def repl(match):
         paragraph_xml = match.group(0)
@@ -87,7 +96,7 @@ def _replace_in_xml(xml_text: str, placeholder_map: dict, occurrence_counts: dic
         new_text = text
         found_any = False
         for placeholder in sorted_placeholders:
-            value = placeholder_map[placeholder]
+            value = normalized_map[placeholder]
             count = new_text.count(placeholder)
             if count:
                 occurrence_counts[placeholder] = occurrence_counts.get(placeholder, 0) + count
@@ -105,7 +114,7 @@ def generate_docx(template_file_path: str, placeholder_map: dict) -> tuple[bytes
     with open(template_file_path, "rb") as f:
         src_bytes = f.read()
 
-    occurrence_counts = {p: 0 for p in placeholder_map}
+    occurrence_counts = {}
     out_buffer = io.BytesIO()
 
     with zipfile.ZipFile(io.BytesIO(src_bytes), "r") as src_zip, zipfile.ZipFile(
