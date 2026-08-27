@@ -11,6 +11,7 @@ export default function UploadStep({
   templatesError,
   selectedTemplateId,
   onTemplateChange,
+  selectedTemplateName, // used on the demo "ready" screen, since the demo template isn't in `templates`
   file,
   onFileSelect,
   onFileClear,
@@ -20,8 +21,57 @@ export default function UploadStep({
   extractError,
   onContinue,
   onTryDemo, // omit this prop to hide the demo button entirely
+  isDemo = false,
+  onAnalyzeDemo, // called from the "ready" screen's Analyze button, demo mode only
 }) {
   const canContinue = Boolean(file) && !extractError && completedSteps >= steps.length;
+
+  // True right after "Try Interactive Demo" attaches the sample file, and
+  // before the user clicks "Analyze Document" — the same beat a real user
+  // would hit between dropping a file and the extraction call firing,
+  // just made explicit instead of instant, so the demo doesn't skip past
+  // it into a progress screen with no context.
+  const isDemoReady = isDemo && Boolean(file) && !isAnalysing && completedSteps === 0;
+
+  if (file && isDemoReady) {
+    return (
+      <section className="sg-card">
+        <p className="sg-subtitle" style={{ marginTop: 0 }}>
+          A sample template and requirements document are attached. Review below, then analyze
+          just like you would with your own document.
+        </p>
+
+        <div className="sg-field">
+          <div className="sg-label-row">
+            <label className="sg-label">Document template</label>
+          </div>
+          <div className="sg-file-chip">
+            <span className="sg-file-chip-icon">📄</span>
+            <span>
+              <div className="sg-file-chip-name">{selectedTemplateName ?? "Demo Sample Contract"}</div>
+              <div className="sg-file-chip-meta">Built-in demo template</div>
+            </span>
+          </div>
+        </div>
+
+        <div className="sg-card-section">
+          <div className="sg-label-row">
+            <label className="sg-label">Requirements document</label>
+          </div>
+          <Dropzone file={file} onSelect={onFileSelect} onClear={onFileClear} />
+        </div>
+
+        <div className="sg-btn-row">
+          <Button variant="secondary" onClick={onFileClear}>
+            ← Back
+          </Button>
+          <Button variant="primary" onClick={onAnalyzeDemo}>
+            Analyze Document <ArrowRightIcon width={16} height={16} />
+          </Button>
+        </div>
+      </section>
+    );
+  }
 
   if (file) {
     if (extractError) {

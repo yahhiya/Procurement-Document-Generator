@@ -38,11 +38,19 @@ function ProcurementWizard() {
   const [extractError, setExtractError] = useState(null);
 
   // Demo mode: true from the moment "Try Interactive Demo" is clicked until
-  // the wizard is reset. Swaps in demo-flavoured loading copy and the
-  // pre-staged sample fetch in place of a real upload + extraction call.
-  // Everything downstream (review, edit, generate, download) runs through
-  // the exact same code path as a real document.
+  // the wizard is reset. Swaps in demo-flavoured loading copy in place of
+  // real upload + extraction wording. Everything downstream (review, edit,
+  // generate, download) runs through the exact same code path as a real
+  // document.
   const [isDemo, setIsDemo] = useState(false);
+
+  // Populated by "Try Interactive Demo": template info + pre-staged field
+  // values, fetched immediately but held here rather than applied straight
+  // away. Nothing about the flow "runs" yet — the user sees the sample
+  // template and file attached first, same as they'd see their own
+  // choices before a real upload kicks off, and only starts analysis
+  // when they click through (see handleAnalyzeDemo below).
+  const [demoData, setDemoData] = useState(null);
 
   // The real extracted fields for the selected template, and the editable
   // values shown in the review form (seeded from extraction, then edited
@@ -199,24 +207,51 @@ function ProcurementWizard() {
     }
   };
 
+  // Phase 1: clicking "⚡ Try Interactive Demo". Fetches the sample data
+  // (near-instant — no LLM call, pure lookup) and shows the sample
+  // template + a sample file attached, exactly like a real user would see
+  // right after picking a template and dropping a file — but doesn't
+  // start "analysing" yet. That happens in handleAnalyzeDemo, once the
+  // user actually clicks through, so the demo has the same two-step feel
+  // (attach, then analyze) as the real flow instead of jumping straight
+  // to a progress screen.
   const handleTryDemo = async () => {
     const myToken = ++extractionTokenRef.current;
 
     setIsDemo(true);
-    // A lightweight stand-in for a real File — only ever read for its
-    // .name (Dropzone/SummaryPanel display), never sent anywhere or passed
-    // to fileToBase64, so it doesn't need to be an actual File object.
-    setFile({ name: "Sample_Requirements.txt (Demo)" });
     setExtractError(null);
     setFields([]);
     setValues({});
+    setIsAnalysing(false);
+    setCompletedSteps(0);
+
+    try {
+      const data = await documentsApi.getDemoSample(token);
+      if (extractionTokenRef.current !== myToken) return;
+
+      setDemoData(data);
+      setSelectedTemplateId(data.template.id);
+      // A lightweight stand-in for a real File — only ever read for
+      // .name/.size (Dropzone/SummaryPanel display), never sent anywhere
+      // or passed to fileToBase64, so it doesn't need to be a real File.
+      setFile({ name: "Sample_Requirements.docx", size: 48200 });
+    } catch (err) {
+      if (extractionTokenRef.current !== myToken) return;
+      setExtractError(err.message);
+    }
+  };
+
+  // Phase 2: clicking "Analyze Document" on the ready screen. Runs the
+  // same cosmetic checklist mechanic as a real upload, timed to
+  // DEMO_LOADING_MS, then applies the already-fetched demo fields/values —
+  // no second network call needed.
+  const handleAnalyzeDemo = () => {
+    const myToken = ++extractionTokenRef.current;
+    if (!demoData) return;
 
     setIsAnalysing(true);
     setCompletedSteps(0);
 
-    // Same cosmetic checklist mechanic as a real upload, just wording it
-    // for demo mode and pacing it to land on DEMO_LOADING_MS instead of
-    // however long a real request happens to take.
     let i = 0;
     const stepInterval = DEMO_LOADING_MS / DEMO_ANALYSIS_STEPS.length;
     cosmeticTimerRef.current = setInterval(() => {
@@ -226,30 +261,17 @@ function ProcurementWizard() {
       }
     }, stepInterval);
 
-    try {
-      const [data] = await Promise.all([
-        documentsApi.getDemoSample(token),
-        new Promise((resolve) => setTimeout(resolve, DEMO_LOADING_MS)),
-      ]);
-
+    setTimeout(() => {
       if (extractionTokenRef.current !== myToken) return;
 
       clearInterval(cosmeticTimerRef.current);
 
-      setSelectedTemplateId(data.template.id);
-      setFields(data.fields);
-      setValues(Object.fromEntries(data.fields.map((f) => [f.key, f.value ?? ""])));
+      setFields(demoData.fields);
+      setValues(Object.fromEntries(demoData.fields.map((f) => [f.key, f.value ?? ""])));
 
       setCompletedSteps(DEMO_ANALYSIS_STEPS.length);
       setIsAnalysing(false);
-    } catch (err) {
-      if (extractionTokenRef.current !== myToken) return;
-
-      clearInterval(cosmeticTimerRef.current);
-
-      setIsAnalysing(false);
-      setExtractError(err.message);
-    }
+    }, DEMO_LOADING_MS);
   };
 
   const clearFile = () => {
@@ -261,6 +283,7 @@ function ProcurementWizard() {
 
     setFile(null);
     setIsDemo(false);
+    setDemoData(null);
     setIsAnalysing(false);
     setCompletedSteps(0);
     setExtractError(null);
@@ -279,6 +302,7 @@ function ProcurementWizard() {
     setSelectedTemplateId(templates[0]?.id ?? null);
     setFile(null);
     setIsDemo(false);
+    setDemoData(null);
     setIsAnalysing(false);
     setCompletedSteps(0);
     setExtractError(null);
@@ -289,13 +313,23 @@ function ProcurementWizard() {
     setGeneratedFile(null);
   };
 
+  // The demo template is deliberately excluded from the real `templates`
+  // list (see backend/demo_seed.py), so it won't be found by the lookup
+  // below while a demo is in progress — fall back to the name that came
+  // back with the demo data itself.
   const selectedTemplate =
-    templates.find((t) => t.id === selectedTemplateId) || null;
+    (isDemo && demoData?.template) ||
+    templates.find((t) => t.id === selectedTemplateId) ||
+    null;
+
+  const isDemoReady = isDemo && Boolean(file) && !isAnalysing && completedSteps === 0;
 
   const statusByStep = {
     upload: file
       ? extractError
         ? "Couldn't read document"
+        : isDemoReady
+        ? "Sample ready — click Analyze"
         : isAnalysing
         ? "Analysing document…"
         : "Analysis complete"
@@ -319,7 +353,9 @@ function ProcurementWizard() {
       <h1 className="sg-title">
         {step === "upload" &&
           (file
-            ? "Analysing Requirements Document"
+            ? isDemoReady
+              ? "Sample Contract Ready"
+              : "Analysing Requirements Document"
             : "Upload Requirements & Select Template")}
 
         {step === "review" && "Review Extracted Fields"}
@@ -343,6 +379,7 @@ function ProcurementWizard() {
               templatesError={templatesError}
               selectedTemplateId={selectedTemplateId}
               onTemplateChange={setSelectedTemplateId}
+              selectedTemplateName={selectedTemplate?.name}
               file={file}
               onFileSelect={handleFileSelect}
               onFileClear={clearFile}
@@ -352,6 +389,8 @@ function ProcurementWizard() {
               extractError={extractError}
               onContinue={() => setStep("review")}
               onTryDemo={handleTryDemo}
+              isDemo={isDemo}
+              onAnalyzeDemo={handleAnalyzeDemo}
             />
           )}
 
