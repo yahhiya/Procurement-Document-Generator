@@ -1,5 +1,17 @@
 import { API_BASE, request } from "./client";
 
+// Demo mode: returns a built-in template id plus pre-staged field values.
+// No document is uploaded and no LLM extraction call happens — this is a
+// pure lookup on the backend, which is what keeps "Try Demo" instant and
+// off the real API quota. Generation afterwards still runs for real
+// (see generateDocument below), against this same template id.
+export function getDemoSample(token) {
+  return request("/api/demo/sample", {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 export function extractDocument(token, { templateId, filename, fileBase64 }) {
   return request("/api/documents/extract", {
     method: "POST",

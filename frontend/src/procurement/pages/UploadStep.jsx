@@ -16,10 +16,12 @@ export default function UploadStep({
   onFileClear,
   isAnalysing,
   completedSteps, // number of ANALYSIS_STEPS finished, 0..length
+  steps = ANALYSIS_STEPS, // demo mode passes its own (differently worded) step list
   extractError,
   onContinue,
+  onTryDemo, // omit this prop to hide the demo button entirely
 }) {
-  const canContinue = Boolean(file) && !extractError && completedSteps >= ANALYSIS_STEPS.length;
+  const canContinue = Boolean(file) && !extractError && completedSteps >= steps.length;
 
   if (file) {
     if (extractError) {
@@ -49,7 +51,7 @@ export default function UploadStep({
 
         <div className="sg-card-section" style={{ marginTop: 0, borderTop: "none", paddingTop: 0 }}>
           <div className="sg-process-list">
-            {ANALYSIS_STEPS.map((label, i) => (
+            {steps.map((label, i) => (
               <ProcessItem
                 key={label}
                 label={label}
@@ -131,6 +133,20 @@ export default function UploadStep({
       <p className="sg-helper" style={{ textAlign: "center" }}>
         Upload a document to continue.
       </p>
+
+      {onTryDemo && (
+        <>
+          <div className="sg-divider">
+            <span>or</span>
+          </div>
+          <button type="button" className="sg-demo-btn" onClick={onTryDemo}>
+            ⚡ Try Interactive Demo
+          </button>
+          <p className="sg-helper" style={{ textAlign: "center" }}>
+            Explore the full workflow with a sample contract — no upload needed.
+          </p>
+        </>
+      )}
     </section>
   );
 }

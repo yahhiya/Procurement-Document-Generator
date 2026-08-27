@@ -65,6 +65,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import auth
 import db
+import demo_seed
 import docx_generator
 import docx_reader
 import llm
@@ -187,6 +188,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.handle_admin_list_templates()
         if self.path == "/api/health":
             return self._send_json(200, {"status": "ok"})
+        if self.path == "/api/demo/sample":
+            return self.handle_demo_sample()
         match = TEMPLATE_FIELDS_RE.match(self.path)
         if match:
             return self.handle_get_template_fields(int(match.group(1)))
@@ -517,6 +520,25 @@ class Handler(BaseHTTPRequestHandler):
             output_bytes,
             filename,
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+
+    def handle_demo_sample(self):
+        """Any logged-in user. Powers the 'Try Interactive Demo' button:
+        returns a built-in demo template's id plus pre-staged field values,
+        so the frontend can skip the real /api/documents/extract call (and
+        the LLM request behind it) entirely. Generation afterwards still
+        goes through the real /api/documents/generate endpoint untouched."""
+        if not self._require_auth():
+            return
+
+        template = demo_seed.get_or_create_demo_template()
+        fields = demo_seed.get_demo_sample_fields(template)
+        return self._send_json(
+            200,
+            {
+                "template": {"id": template["id"], "name": template["name"]},
+                "fields": fields,
+            },
         )
 
     # ---- template handlers -------------------------------------------------

@@ -10,3 +10,15 @@ export const ANALYSIS_STEPS = [
   "Extracting supplier information",
   "Mapping fields to template",
 ];
+
+// Shown during the "Try Interactive Demo" loading state instead of the
+// steps above. Field values themselves are real, pre-staged sample data
+// from the backend (see api/documentsApi.js getDemoSample) — this array is
+// purely cosmetic, giving the demo the same "actively working" feel as a
+// real extraction without waiting on one.
+export const DEMO_ANALYSIS_STEPS = [
+  "Loading sample contract…",
+  "Analyzing requirements…",
+  "Extracting fields…",
+  "Mapping fields to template…",
+];

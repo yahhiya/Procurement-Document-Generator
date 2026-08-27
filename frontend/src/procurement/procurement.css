@@ -983,3 +983,52 @@
   margin: 0;
   line-height: 1.6;
 }
+
+/* ---- Demo mode ("Try Interactive Demo") ---------------------------------- */
+
+.sg-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sg-space-3);
+  margin: var(--sg-space-5) 0 var(--sg-space-4);
+  color: var(--sg-ink-500);
+  font-size: var(--sg-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sg-divider::before,
+.sg-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--sg-border);
+}
+
+.sg-demo-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sg-space-2);
+  padding: var(--sg-space-3) var(--sg-space-5);
+  border-radius: var(--sg-radius-md);
+  border: 1px dashed var(--sg-teal-500);
+  background: var(--sg-teal-050);
+  color: var(--sg-teal-600);
+  font-family: var(--sg-font-ui);
+  font-size: var(--sg-text-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--sg-duration) var(--sg-ease),
+    border-color var(--sg-duration) var(--sg-ease);
+}
+
+.sg-demo-btn:hover {
+  background: #d9f0f3;
+  border-color: var(--sg-teal-600);
+}
+
+.sg-demo-btn:active {
+  transform: translateY(1px);
+}
