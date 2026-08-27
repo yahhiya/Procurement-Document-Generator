@@ -18,19 +18,14 @@ VALID_FIELD_TYPES = {"text", "paragraph", "number", "currency", "date"}
 
 
 def derive_placeholder(field: dict) -> str:
-    """
-    Return the exact placeholder configured/discovered for this field.
-
-    IMPORTANT:
-    We do not invent a placeholder if one was not found in the template.
-    """
-
+    """The literal token to find-and-replace in a template's .docx file for
+    this field. Uses whatever the AI found (or an admin set manually) if
+    present; otherwise falls back to a predictable "[KEY_UPPERCASE]" form
+    so generation always has *something* deterministic to look for."""
     explicit = field.get("placeholder")
-
     if isinstance(explicit, str) and explicit.strip():
         return explicit.strip()
-
-    return ""
+    return f"[{field['key'].upper()}]"
 
 # Google has been retiring Gemini model versions frequently. Rather than
 # hardcode one model name that breaks the moment it's retired, try these in
@@ -108,111 +103,24 @@ def _call_gemini(prompt: str) -> str:
     )
 
 
-def _build_prompt(
-    template_name: str,
-    document_type: str,
-    document_text: str
-) -> str:
+def _build_prompt(template_name: str, document_type: str, document_text: str) -> str:
+    return f"""You are helping a procurement team set up a contract template in a document generation system.
 
-    return f"""You are helping a procurement team configure a contract template for a document generation system.
+Below is the text of a contract template called "{template_name}" (document type: {document_type}).
 
-Template name: "{template_name}"
-Document type: "{document_type}"
+Identify the pieces of information that CHANGE from one contract to the next when this template is used — such as counterparty name, contract value, dates, scope of work — as opposed to the fixed legal wording that stays the same every time. This template contains literal placeholder tokens marking exactly where each piece of variable information goes. Different templates use different conventions for these — double curly braces like {{{{vendor_name}}}}, square brackets like [VENDOR_NAME], single braces, or something else entirely. Look at the actual document text below and use whatever convention it actually uses; do not assume it's square brackets.
 
-Your task is to identify the pieces of information that CHANGE from one contract to another.
-
-Examples include:
-- customer/vendor/supplier names
-- business addresses
-- contract dates
-- project names
-- scope of work and services
-- contract values
-- payment terms
-- contacts
-- obligations
-- milestones
-- service levels
-- security requirements
-- signatures
-
-The template may contain literal placeholder tokens.
-
-IMPORTANT:
-Do NOT assume that placeholders use a particular format.
-
-A template might use formats such as:
-
-{{{{customer_name}}}}
-[CUSTOMER_NAME]
-<<CUSTOMER_NAME>>
-<customer_name>
-CUSTOMER_NAME
-
-These are only examples.
-
-If the template contains a placeholder, you MUST copy the exact placeholder token as it appears in the template.
-
-For example, if the document contains:
-
-{{{{customer_name}}}}
-
-then return:
-
-"placeholder": "{{{{customer_name}}}}"
-
-If the document contains:
-
-[CUSTOMER_NAME]
-
-then return:
-
-"placeholder": "[CUSTOMER_NAME]"
-
-Do NOT convert one placeholder style into another.
-
-Do NOT change capitalization.
-
-Do NOT add or remove brackets, braces, angle brackets or other characters.
-
-Do NOT invent a placeholder.
-
-If a variable field has no literal placeholder in the document, return:
-
-"placeholder": null
-
-Respond with ONLY a JSON array.
-
-Every item MUST contain exactly these keys:
-
-{{
-  "key": "short_snake_case_machine_identifier",
-  "label": "Human readable field name",
-  "type": "text | paragraph | number | currency | date",
-  "required": true,
-  "placeholder": "exact placeholder from template or null"
-}}
-
-Rules:
-
-1. Identify information that genuinely varies between contracts.
-2. Do not identify fixed legal wording as a field.
-3. Copy literal placeholders exactly as they appear.
-4. Do not invent placeholders.
-5. If the same placeholder appears multiple times, create only ONE field for it.
-6. Preserve the exact capitalization and punctuation of placeholders.
-7. A placeholder can use ANY syntax. Never assume {{...}}, [...], <<...>>, etc.
-8. The field key is separate from the placeholder.
-9. The key should be a clean snake_case identifier.
-10. The placeholder must be the literal token found in the document.
+Respond with ONLY a JSON array (no explanation, no markdown code fences, nothing else) where each item has exactly these keys:
+- "key": a short snake_case machine identifier, e.g. "vendor_name"
+- "label": a short human-readable label, e.g. "Vendor name"
+- "type": one of "text", "paragraph", "number", "currency", "date"
+- "required": true or false
+- "placeholder": the exact literal placeholder token as it appears verbatim in the document text — copied character-for-character, including whatever punctuation it actually uses (curly braces, square brackets, or otherwise) — or null only if you truly cannot find a literal placeholder for this field anywhere in the text.
 
 Template text:
-
 ---
 {document_text}
----
-
-Return ONLY the JSON array."""
+---"""
 
 
 def _sanitize_key(raw_key: str, label: str, used_keys: set) -> str:

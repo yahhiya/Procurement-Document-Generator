@@ -1,40 +1,15 @@
 """
-Robust DOCX template filler.
-
-Supports:
-- {{customer_name}}
-- [CUSTOMER_NAME]
-- <<CUSTOMER_NAME>>
-- split placeholders across Word runs
-- placeholders inside normal paragraphs
-- placeholders inside tables
-- placeholders in headers and footers
-
-The important rule is:
-the field's `placeholder` is the exact token that exists in the template.
-We never invent a different token during generation.
+Fills in a .docx template by finding literal placeholder tokens (like
+"{{customer_name}}") and replacing them with confirmed values.
 """
 
 import io
 import re
 import zipfile
 
-
-# Word XML paragraph
-PARAGRAPH_RE = re.compile(
-    r"<w:p(?:\s[^>]*)?>.*?</w:p>",
-    re.DOTALL,
-)
-
-PPR_RE = re.compile(
-    r"<w:pPr>.*?</w:pPr>",
-    re.DOTALL,
-)
-
-RPR_RE = re.compile(
-    r"<w:rPr>.*?</w:rPr>",
-    re.DOTALL,
-)
+PARAGRAPH_RE = re.compile(r"<w:p(?:\s[^>]*)?>.*?</w:p>", re.DOTALL)
+PPR_RE = re.compile(r"<w:pPr>.*?</w:pPr>", re.DOTALL)
+RPR_RE = re.compile(r"<w:rPr>.*?</w:rPr>", re.DOTALL)
 
 PARA_TOKEN_RE = re.compile(
     r"<w:t(?:\s[^>]*)?>(.*?)</w:t>"
@@ -44,339 +19,126 @@ PARA_TOKEN_RE = re.compile(
     re.DOTALL,
 )
 
-
-# document.xml + headers + footers
-TEXT_PART_RE = re.compile(
-    r"^word/(document|header\d*|footer\d*)\.xml$"
-)
+TEXT_PART_RE = re.compile(r"^word/(document|header\d*|footer\d*)\.xml$")
 
 
 class GenerationError(Exception):
-    """Raised when generation cannot proceed safely."""
+    """Raised when generation can't proceed safely."""
 
 
 def _xml_unescape(text: str) -> str:
-    return (
-        text
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&amp;", "&")
-        .replace("&quot;", '"')
-        .replace("&apos;", "'")
-    )
+    return text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
 
 
 def _xml_escape(text: str) -> str:
-    return (
-        str(text)
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace('"', "&quot;")
-        .replace("'", "&apos;")
-    )
+    return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def _paragraph_text(paragraph_xml: str) -> str:
-    """
-    Extract visible text from a Word paragraph.
-
-    This reconstructs text even when Word has split a placeholder
-    across multiple <w:r> elements.
-    """
     parts = []
-
-    for match in PARA_TOKEN_RE.finditer(paragraph_xml):
-        token = match.group(0)
-
+    for m in PARA_TOKEN_RE.finditer(paragraph_xml):
+        token = m.group(0)
         if token.startswith("<w:br"):
             parts.append("\n")
-
         elif token.startswith("<w:tab"):
             parts.append("\t")
-
         else:
-            parts.append(
-                _xml_unescape(match.group(1) or "")
-            )
-
+            parts.append(_xml_unescape(m.group(1) or ""))
     return "".join(parts)
 
 
-def _first_run_properties(paragraph_xml: str) -> str:
-    """
-    Preserve formatting from the first run in the paragraph.
-    """
-    ppr_match = PPR_RE.search(paragraph_xml)
-
-    search_start = (
-        ppr_match.end()
-        if ppr_match
-        else 0
-    )
-
-    rpr_match = RPR_RE.search(
-        paragraph_xml,
-        search_start,
-    )
-
-    return (
-        rpr_match.group(0)
-        if rpr_match
-        else ""
-    )
-
-
-def _text_to_runs_xml(
-    text: str,
-    rpr: str,
-) -> str:
-
-    segments = re.split(
-        r"(\n|\t)",
-        text,
-    )
-
+def _text_to_runs_xml(text: str, rpr: str) -> str:
+    segments = re.split(r"(\n|\t)", text)
     runs = []
-
-    for segment in segments:
-
-        if segment == "\n":
-            runs.append(
-                f"<w:r>{rpr}<w:br/></w:r>"
-            )
-
-        elif segment == "\t":
-            runs.append(
-                f"<w:r>{rpr}<w:tab/></w:r>"
-            )
-
-        elif segment == "":
+    for seg in segments:
+        if seg == "\n":
+            runs.append(f"<w:r>{rpr}<w:br/></w:r>")
+        elif seg == "\t":
+            runs.append(f"<w:r>{rpr}<w:tab/></w:r>")
+        elif seg == "":
             continue
-
         else:
-            runs.append(
-                f'<w:r>{rpr}'
-                f'<w:t xml:space="preserve">'
-                f'{_xml_escape(segment)}'
-                f'</w:t>'
-                f'</w:r>'
-            )
-
-    if not runs:
-        runs.append(
-            f'<w:r>{rpr}'
-            f'<w:t xml:space="preserve"></w:t>'
-            f'</w:r>'
-        )
-
-    return "".join(runs)
+            runs.append(f'<w:r>{rpr}<w:t xml:space="preserve">{_xml_escape(seg)}</w:t></w:r>')
+    return "".join(runs) or f'<w:r>{rpr}<w:t xml:space="preserve"></w:t></w:r>'
 
 
-def _rebuild_paragraph(
-    paragraph_xml: str,
-    new_text: str,
-) -> str:
+def _rebuild_paragraph(paragraph_xml: str, new_text: str) -> str:
+    ppr_match = PPR_RE.search(paragraph_xml)
+    ppr = ppr_match.group(0) if ppr_match else ""
 
-    ppr_match = PPR_RE.search(
-        paragraph_xml
-    )
+    search_start = ppr_match.end() if ppr_match else 0
+    rpr_match = RPR_RE.search(paragraph_xml, search_start)
+    rpr = rpr_match.group(0) if rpr_match else ""
 
-    ppr = (
-        ppr_match.group(0)
-        if ppr_match
-        else ""
-    )
-
-    rpr = _first_run_properties(
-        paragraph_xml
-    )
-
-    runs_xml = _text_to_runs_xml(
-        new_text,
-        rpr,
-    )
-
-    return (
-        "<w:p>"
-        f"{ppr}"
-        f"{runs_xml}"
-        "</w:p>"
-    )
+    runs_xml = _text_to_runs_xml(new_text, rpr)
+    return f"<w:p>{ppr}{runs_xml}</w:p>"
 
 
-def _normalise_placeholder(
-    placeholder: str,
-) -> str:
-    """
-    Do NOT invent a placeholder.
-
-    We only clean whitespace around the exact
-    token stored in the template field.
-    """
-    return str(
-        placeholder or ""
-    ).strip()
-
-
-def _replace_in_xml(
-    xml_text: str,
-    placeholder_map: dict,
-    occurrence_counts: dict,
-) -> str:
+def _replace_in_xml(xml_text: str, placeholder_map: dict, occurrence_counts: dict) -> str:
+    # A stored placeholder is one of two things: a bare field key/name with
+    # no punctuation of its own ("customer_name", "Customer Name") — which
+    # we format into the app's default "{{customer_name}}" convention — or
+    # an already-literal token copied verbatim from the template
+    # ("{{customer_name}}", "[VENDOR_NAME]", or any other format an admin
+    # or the AI discovery step found in the actual document). Only the
+    # first case should be reformatted; the second must be matched exactly
+    # as-is, or a template using any convention other than bare "{{...}}"
+    # can never match anything (this used to double-wrap literal tokens
+    # like "[VENDOR_NAME]" into "{{[vendor_name]}}", guaranteeing zero
+    # matches for every non-curly-brace template).
+    BARE_KEY_RE = re.compile(r"^[A-Za-z0-9_ ]+$")
 
     normalized_map = {}
+    for k, v in placeholder_map.items():
+        stripped = k.strip()
+        if BARE_KEY_RE.fullmatch(stripped):
+            formatted_key = "{{" + stripped.lower().replace(" ", "_") + "}}"
+        else:
+            formatted_key = stripped
+        normalized_map[formatted_key] = v
+        occurrence_counts[formatted_key] = 0
 
-    for placeholder, value in placeholder_map.items():
+    sorted_placeholders = sorted(normalized_map.keys(), key=len, reverse=True)
 
-        token = _normalise_placeholder(
-            placeholder
-        )
-
-        if not token:
-            continue
-
-        normalized_map[token] = (
-            "" if value is None
-            else str(value)
-        )
-
-        occurrence_counts.setdefault(
-            token,
-            0,
-        )
-
-    if not normalized_map:
-        return xml_text
-
-    # Longest first prevents partial placeholder
-    # collisions.
-    sorted_placeholders = sorted(
-        normalized_map.keys(),
-        key=len,
-        reverse=True,
-    )
-
-    def replace_paragraph(match):
-
+    def repl(match):
         paragraph_xml = match.group(0)
-
-        visible_text = _paragraph_text(
-            paragraph_xml
-        )
-
-        if not visible_text:
+        text = _paragraph_text(paragraph_xml)
+        if not text:
             return paragraph_xml
 
-        new_text = visible_text
+        new_text = text
         found_any = False
-
         for placeholder in sorted_placeholders:
-
-            value = normalized_map[
-                placeholder
-            ]
-
-            count = new_text.count(
-                placeholder
-            )
-
-            if count > 0:
-
-                new_text = new_text.replace(
-                    placeholder,
-                    value,
-                )
-
-                occurrence_counts[
-                    placeholder
-                ] = (
-                    occurrence_counts.get(
-                        placeholder,
-                        0,
-                    )
-                    + count
-                )
-
+            value = normalized_map[placeholder]
+            count = new_text.count(placeholder)
+            if count:
+                occurrence_counts[placeholder] = occurrence_counts.get(placeholder, 0) + count
+                new_text = new_text.replace(placeholder, value)
                 found_any = True
 
         if not found_any:
             return paragraph_xml
+        return _rebuild_paragraph(paragraph_xml, new_text)
 
-        return _rebuild_paragraph(
-            paragraph_xml,
-            new_text,
-        )
-
-    return PARAGRAPH_RE.sub(
-        replace_paragraph,
-        xml_text,
-    )
+    return PARAGRAPH_RE.sub(repl, xml_text)
 
 
-def generate_docx(
-    template_file_path: str,
-    placeholder_map: dict,
-) -> tuple[bytes, dict]:
-
-    with open(
-        template_file_path,
-        "rb",
-    ) as f:
-        source_bytes = f.read()
-
-    output_buffer = io.BytesIO()
+def generate_docx(template_file_path: str, placeholder_map: dict) -> tuple[bytes, dict]:
+    with open(template_file_path, "rb") as f:
+        src_bytes = f.read()
 
     occurrence_counts = {}
+    out_buffer = io.BytesIO()
 
-    with zipfile.ZipFile(
-        io.BytesIO(source_bytes),
-        "r",
-    ) as source_zip:
+    with zipfile.ZipFile(io.BytesIO(src_bytes), "r") as src_zip, zipfile.ZipFile(
+        out_buffer, "w", zipfile.ZIP_DEFLATED
+    ) as out_zip:
+        for item in src_zip.infolist():
+            data = src_zip.read(item.filename)
+            if TEXT_PART_RE.match(item.filename):
+                xml_text = data.decode("utf-8")
+                xml_text = _replace_in_xml(xml_text, placeholder_map, occurrence_counts)
+                data = xml_text.encode("utf-8")
+            out_zip.writestr(item, data)
 
-        with zipfile.ZipFile(
-            output_buffer,
-            "w",
-            zipfile.ZIP_DEFLATED,
-        ) as output_zip:
-
-            for item in source_zip.infolist():
-
-                data = source_zip.read(
-                    item.filename
-                )
-
-                if TEXT_PART_RE.match(
-                    item.filename
-                ):
-
-                    try:
-                        xml_text = data.decode(
-                            "utf-8"
-                        )
-                    except UnicodeDecodeError:
-                        output_zip.writestr(
-                            item,
-                            data,
-                        )
-                        continue
-
-                    xml_text = _replace_in_xml(
-                        xml_text,
-                        placeholder_map,
-                        occurrence_counts,
-                    )
-
-                    data = xml_text.encode(
-                        "utf-8"
-                    )
-
-                output_zip.writestr(
-                    item,
-                    data,
-                )
-
-    return (
-        output_buffer.getvalue(),
-        occurrence_counts,
-    )
+    return out_buffer.getvalue(), occurrence_counts

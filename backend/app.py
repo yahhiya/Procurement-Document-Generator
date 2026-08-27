@@ -483,7 +483,36 @@ class Handler(BaseHTTPRequestHandler):
 
         # Blank optional fields still get "replaced" — with an empty string —
         # so no bracket placeholder is ever left sitting in the final file.
-        placeholder_map = {llm.derive_placeholder(f): value_by_key[f["key"]] for f in fields}
+        #
+        # Each field gets more than one candidate token to look for, not
+        # just whatever's stored in fields_json. Field discovery (llm.py)
+        # can end up with a placeholder that doesn't actually match the
+        # document — e.g. a curly-brace template where discovery reported
+        # a bracket-style guess instead of copying the real token — and
+        # that shouldn't mean every generation fails until an admin
+        # manually fixes 100+ field rows. Trying the field's own key in
+        # both this app's default "{{key}}" convention and a "[KEY]"
+        # convention covers the two most common template authoring styles
+        # even when the stored placeholder is wrong.
+        placeholder_map = {}
+        for f in fields:
+            value = value_by_key[f["key"]]
+            for candidate in {
+                llm.derive_placeholder(f),
+                "{{" + f["key"] + "}}",
+                f"[{f['key'].upper()}]",
+            }:
+                placeholder_map[candidate] = value
+
+        def _field_resolved(f, occurrence_counts):
+            return any(
+                occurrence_counts.get(candidate, 0) > 0
+                for candidate in (
+                    llm.derive_placeholder(f),
+                    "{{" + f["key"] + "}}",
+                    f"[{f['key'].upper()}]",
+                )
+            )
 
         file_path = os.path.join(os.path.dirname(__file__), template["file_path"])
         try:
@@ -502,7 +531,7 @@ class Handler(BaseHTTPRequestHandler):
         unresolved = [
             f["label"]
             for f in fields
-            if value_by_key[f["key"]] and occurrence_counts.get(llm.derive_placeholder(f), 0) == 0
+            if value_by_key[f["key"]] and not _field_resolved(f, occurrence_counts)
         ]
         if unresolved:
             return self._send_json(
