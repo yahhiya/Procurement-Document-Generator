@@ -10,6 +10,7 @@ import GenerateStep from "./pages/GenerateStep";
 import LoginPage from "./pages/LoginPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminTemplatesPage from "./pages/AdminTemplatesPage";
+import PreviewModal from "./components/PreviewModal";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import * as templatesApi from "./api/templatesApi";
 import * as documentsApi from "./api/documentsApi";
@@ -51,6 +52,10 @@ function ProcurementWizard() {
   // choices before a real upload kicks off, and only starts analysis
   // when they click through (see handleAnalyzeDemo below).
   const [demoData, setDemoData] = useState(null);
+
+  // "template" | "requirements" | "info" | null — drives the click-to-preview
+  // and "what is this tool" explainer modals on the demo ready screen.
+  const [openModal, setOpenModal] = useState(null);
 
   // The real extracted fields for the selected template, and the editable
   // values shown in the review form (seeded from extraction, then edited
@@ -187,7 +192,7 @@ function ProcurementWizard() {
 
       clearInterval(cosmeticTimerRef.current);
 
-      setFields(data.fields);
+      setFields(data.fields.map((f) => ({ ...f, needsVerification: f.needs_verification })));
 
       setValues(
         Object.fromEntries(
@@ -266,7 +271,7 @@ function ProcurementWizard() {
 
       clearInterval(cosmeticTimerRef.current);
 
-      setFields(demoData.fields);
+      setFields(demoData.fields.map((f) => ({ ...f, needsVerification: f.needs_verification })));
       setValues(Object.fromEntries(demoData.fields.map((f) => [f.key, f.value ?? ""])));
 
       setCompletedSteps(DEMO_ANALYSIS_STEPS.length);
@@ -284,6 +289,7 @@ function ProcurementWizard() {
     setFile(null);
     setIsDemo(false);
     setDemoData(null);
+    setOpenModal(null);
     setIsAnalysing(false);
     setCompletedSteps(0);
     setExtractError(null);
@@ -303,6 +309,7 @@ function ProcurementWizard() {
     setFile(null);
     setIsDemo(false);
     setDemoData(null);
+    setOpenModal(null);
     setIsAnalysing(false);
     setCompletedSteps(0);
     setExtractError(null);
@@ -391,6 +398,10 @@ function ProcurementWizard() {
               onTryDemo={handleTryDemo}
               isDemo={isDemo}
               onAnalyzeDemo={handleAnalyzeDemo}
+              demoTemplatePreview={demoData?.template}
+              demoRequirementsPreview={demoData?.requirements_document}
+              onOpenPreview={(kind) => setOpenModal(kind)}
+              onOpenInfo={() => setOpenModal("info")}
             />
           )}
 
@@ -406,6 +417,7 @@ function ProcurementWizard() {
               }
               onBack={() => setStep("upload")}
               onGenerate={handleGenerate}
+              isDemo={isDemo}
             />
           )}
 
@@ -427,6 +439,43 @@ function ProcurementWizard() {
           status={statusByStep[step]}
         />
       </div>
+
+      {openModal === "template" && demoData?.template && (
+        <PreviewModal
+          title={demoData.template.name}
+          subtitle="Blank contract template — the fields below get filled in from the requirements document"
+          body={demoData.template.preview_text}
+          onClose={() => setOpenModal(null)}
+        />
+      )}
+
+      {openModal === "requirements" && demoData?.requirements_document && (
+        <PreviewModal
+          title={demoData.requirements_document.name}
+          subtitle="What a user's requirements document — the source the AI reads to fill in the template"
+          body={demoData.requirements_document.preview_text}
+          onClose={() => setOpenModal(null)}
+        />
+      )}
+
+      {openModal === "info" && (
+        <PreviewModal
+          title="What is this tool?"
+          body={
+            "This app turns a plain requirements document (an email, memo, or brief) into a " +
+            "signed-ready procurement contract, automatically.\n\n" +
+            "Here's what happens when you click \"Analyze Document\":\n\n" +
+            "1. The requirements document is read and the AI pulls out the details that belong " +
+            "in the contract — names, addresses, dates, pricing, deliverables — using the " +
+            "template's placeholder fields as a checklist.\n\n" +
+            "2. You land on the Review step with every field pre-filled. This is where a real " +
+            "user checks the AI got everything right, and edits anything that's missing or wrong.\n\n" +
+            "3. Clicking Generate fills in the actual contract template and gives you a real, " +
+            "ready-to-send .docx file — the same file a lawyer or procurement team would sign."
+          }
+          onClose={() => setOpenModal(null)}
+        />
+      )}
     </main>
   );
 }

@@ -25,9 +25,46 @@ import io
 import zipfile
 
 import db
+import docx_reader
 import templates_store
 
 DEMO_TEMPLATE_NAME = "Demo Sample Contract"
+
+SAMPLE_REQUIREMENTS_FILENAME = "Sample_Requirements.docx"
+
+# What a real user's uploaded requirements document might look like — the
+# source text the "AI extraction" step is pretending to read. Shown in the
+# demo's document-preview modal so a reviewer can see where the pre-filled
+# field values supposedly came from, not just that they appeared.
+SAMPLE_REQUIREMENTS_TEXT = """PROCUREMENT REQUEST — SUBSEA CABLE INSPECTION & MAINTENANCE
+
+From: Marcus Ridley, Director of Procurement, Atlas Offshore Energy Corp
+To: Contracts Desk
+Re: New service agreement — Phase 2
+
+We'd like to move ahead with Northwind Marine Services LLC (4400 Harbor Point
+Blvd, Suite 210, Norfolk, VA 23510) for Phase 2 of the subsea cable
+inspection and maintenance programme.
+
+Scope: ROV-based inspection, cathodic protection surveys, and routine
+maintenance across our offshore lease blocks, with quarterly reporting.
+Deliverables should cover inspection reports, cathodic protection survey
+data, video documentation, and a final maintenance summary at the close of
+each quarter.
+
+Commercials: total value 1,485,000.00, split 30% on execution, 40% at the
+Phase 2 midpoint inspection sign-off, and 30% on final deliverable
+acceptance. Standard net-30 invoicing.
+
+Term: effective September 1, 2026, running September 15, 2026 through
+September 14, 2027. Governing law should be Texas, with a 45-day
+termination-for-convenience notice period either side.
+
+Signatories: Dana Whitfield (VP, Client Delivery) for Northwind, myself for
+Atlas.
+
+Please draft the agreement for review.
+"""
 
 # ---------------------------------------------------------------------------
 # Field definitions. `key` drives the review-screen label lookup and the
@@ -238,3 +275,12 @@ def get_demo_sample_fields(template_row):
         }
         for f in fields
     ]
+
+
+def get_template_preview_text(template_row):
+    """Plain-text contents of the actual demo template .docx, for the
+    click-to-preview modal — the real file, not a description of it."""
+    import os
+
+    file_path = os.path.join(os.path.dirname(__file__), template_row["file_path"])
+    return docx_reader.extract_text(file_path)

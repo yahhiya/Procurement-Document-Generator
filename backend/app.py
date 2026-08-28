@@ -562,10 +562,26 @@ class Handler(BaseHTTPRequestHandler):
 
         template = demo_seed.get_or_create_demo_template()
         fields = demo_seed.get_demo_sample_fields(template)
+
+        # Swap the literal {{key}} tokens for readable [Field Label] text —
+        # a CV reviewer clicking to preview the template wants to see what
+        # a blank contract looks like, not the app's internal token syntax.
+        preview_text = demo_seed.get_template_preview_text(template)
+        for f in fields:
+            preview_text = preview_text.replace("{{" + f["key"] + "}}", f"[{f['label']}]")
+
         return self._send_json(
             200,
             {
-                "template": {"id": template["id"], "name": template["name"]},
+                "template": {
+                    "id": template["id"],
+                    "name": template["name"],
+                    "preview_text": preview_text,
+                },
+                "requirements_document": {
+                    "name": demo_seed.SAMPLE_REQUIREMENTS_FILENAME,
+                    "preview_text": demo_seed.SAMPLE_REQUIREMENTS_TEXT,
+                },
                 "fields": fields,
             },
         )

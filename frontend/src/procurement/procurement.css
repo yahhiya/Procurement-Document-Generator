@@ -1032,3 +1032,122 @@
 .sg-demo-btn:active {
   transform: translateY(1px);
 }
+
+/* ---- Document preview modal (demo mode) ----------------------------------- */
+
+.sg-preview-modal {
+  max-width: 640px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sg-space-6);
+}
+
+.sg-preview-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sg-space-4);
+  margin-bottom: var(--sg-space-4);
+}
+
+.sg-preview-modal-subtitle {
+  font-size: var(--sg-text-sm);
+  color: var(--sg-ink-500);
+  margin: var(--sg-space-1) 0 0;
+}
+
+.sg-preview-modal-close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--sg-radius-full, 999px);
+  border: 1px solid var(--sg-border);
+  background: var(--sg-surface);
+  color: var(--sg-ink-500);
+  cursor: pointer;
+  font-size: var(--sg-text-sm);
+  line-height: 1;
+}
+
+.sg-preview-modal-close:hover {
+  background: var(--sg-ink-100);
+  color: var(--sg-ink-900);
+}
+
+.sg-preview-modal-body {
+  overflow-y: auto;
+  border: 1px solid var(--sg-border);
+  border-radius: var(--sg-radius-md);
+  background: #fafbfc;
+  padding: var(--sg-space-5);
+}
+
+.sg-preview-modal-text {
+  white-space: pre-wrap;
+  font-family: var(--sg-font-ui);
+  font-size: var(--sg-text-sm);
+  color: var(--sg-navy-900);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ---- Inline "what is this" info affordance -------------------------------- */
+
+.sg-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--sg-teal-500);
+  color: var(--sg-teal-600);
+  background: var(--sg-teal-050);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  vertical-align: middle;
+  margin-left: var(--sg-space-2);
+  line-height: 1;
+  flex: none;
+}
+
+.sg-info-btn:hover {
+  background: #d9f0f3;
+  border-color: var(--sg-teal-600);
+}
+
+.sg-file-chip-clickable {
+  cursor: pointer;
+  transition: border-color var(--sg-duration) var(--sg-ease),
+    background var(--sg-duration) var(--sg-ease);
+}
+
+.sg-file-chip-clickable:hover {
+  border-color: var(--sg-teal-500);
+  background: #fafdfd;
+}
+
+.sg-demo-banner {
+  display: flex;
+  gap: var(--sg-space-3);
+  align-items: flex-start;
+  background: var(--sg-teal-050);
+  border: 1px solid var(--sg-teal-500);
+  border-radius: var(--sg-radius-md);
+  padding: var(--sg-space-4) var(--sg-space-5);
+  margin-bottom: var(--sg-space-5);
+}
+
+.sg-demo-banner-icon {
+  font-size: var(--sg-text-lg);
+  line-height: 1;
+}
+
+.sg-demo-banner-text {
+  font-size: var(--sg-text-sm);
+  color: var(--sg-navy-900);
+  line-height: 1.6;
+  margin: 0;
+}

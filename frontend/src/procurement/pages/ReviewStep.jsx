@@ -33,11 +33,21 @@ function Field({ field, value, onChange }) {
   );
 }
 
-export default function ReviewStep({ fields, values, onChange, onBack, onGenerate }) {
+export default function ReviewStep({ fields, values, onChange, onBack, onGenerate, isDemo = false }) {
   const hasUnresolvedField = fields.some((f) => f.needsVerification && !values[f.key]);
 
   return (
     <section className="sg-card">
+      {isDemo && (
+        <div className="sg-demo-banner">
+          <span className="sg-demo-banner-icon">✨</span>
+          <p className="sg-demo-banner-text">
+            <strong>AI has extracted these fields for you</strong> from the requirements document.
+            This is the review step — in normal use, you'd check each value is correct (or edit
+            anything that isn't) before generating the final contract.
+          </p>
+        </div>
+      )}
       <p className="sg-subtitle" style={{ marginTop: 0 }}>
         Confirm the fields before generating.
       </p>

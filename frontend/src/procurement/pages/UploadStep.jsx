@@ -11,7 +11,6 @@ export default function UploadStep({
   templatesError,
   selectedTemplateId,
   onTemplateChange,
-  selectedTemplateName, // used on the demo "ready" screen, since the demo template isn't in `templates`
   file,
   onFileSelect,
   onFileClear,
@@ -23,6 +22,10 @@ export default function UploadStep({
   onTryDemo, // omit this prop to hide the demo button entirely
   isDemo = false,
   onAnalyzeDemo, // called from the "ready" screen's Analyze button, demo mode only
+  demoTemplatePreview, // { name, preview_text } — demo mode only
+  demoRequirementsPreview, // { name, preview_text } — demo mode only
+  onOpenPreview, // (kind: "template" | "requirements") => void, demo mode only
+  onOpenInfo, // () => void — "what is this tool" explainer, demo mode only
 }) {
   const canContinue = Boolean(file) && !extractError && completedSteps >= steps.length;
 
@@ -39,26 +42,53 @@ export default function UploadStep({
         <p className="sg-subtitle" style={{ marginTop: 0 }}>
           A sample template and requirements document are attached. Review below, then analyze
           just like you would with your own document.
+          {onOpenInfo && (
+            <button
+              type="button"
+              className="sg-info-btn"
+              onClick={onOpenInfo}
+              aria-label="What is this tool?"
+              title="What is this tool?"
+            >
+              ?
+            </button>
+          )}
         </p>
 
         <div className="sg-field">
           <div className="sg-label-row">
             <label className="sg-label">Document template</label>
           </div>
-          <div className="sg-file-chip">
+          <button
+            type="button"
+            className="sg-file-chip sg-file-chip-clickable"
+            onClick={() => onOpenPreview?.("template")}
+            style={{ width: "100%", textAlign: "left", border: "1px solid var(--sg-border)" }}
+          >
             <span className="sg-file-chip-icon">📄</span>
             <span>
-              <div className="sg-file-chip-name">{selectedTemplateName ?? "Demo Sample Contract"}</div>
-              <div className="sg-file-chip-meta">Built-in demo template</div>
+              <div className="sg-file-chip-name">{demoTemplatePreview?.name ?? "Demo Sample Contract"}</div>
+              <div className="sg-file-chip-meta">Built-in demo template · click to preview</div>
             </span>
-          </div>
+          </button>
         </div>
 
         <div className="sg-card-section">
           <div className="sg-label-row">
             <label className="sg-label">Requirements document</label>
           </div>
-          <Dropzone file={file} onSelect={onFileSelect} onClear={onFileClear} />
+          <button
+            type="button"
+            className="sg-file-chip sg-file-chip-clickable"
+            onClick={() => onOpenPreview?.("requirements")}
+            style={{ width: "100%", textAlign: "left", border: "1px solid var(--sg-border)" }}
+          >
+            <span className="sg-file-chip-icon">📄</span>
+            <span>
+              <div className="sg-file-chip-name">{demoRequirementsPreview?.name ?? file.name}</div>
+              <div className="sg-file-chip-meta">47 KB · click to preview</div>
+            </span>
+          </button>
         </div>
 
         <div className="sg-btn-row">
