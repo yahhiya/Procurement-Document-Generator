@@ -40,7 +40,7 @@ export default function UploadStep({
     return (
       <section className="sg-card">
         <p className="sg-subtitle" style={{ marginTop: 0 }}>
-          A sample template and requirements document are attached. Review below, then analyze
+          A sample template and requirements document are attached. Review below, then analyse
           just like you would with your own document.
           {onOpenInfo && (
             <button
@@ -96,7 +96,7 @@ export default function UploadStep({
             ← Back
           </Button>
           <Button variant="primary" onClick={onAnalyzeDemo}>
-            Analyze Document <ArrowRightIcon width={16} height={16} />
+            Analyse Document <ArrowRightIcon width={16} height={16} />
           </Button>
         </div>
       </section>

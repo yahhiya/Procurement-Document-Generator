@@ -1036,11 +1036,14 @@
 /* ---- Document preview modal (demo mode) ----------------------------------- */
 
 .sg-preview-modal {
-  max-width: 640px;
-  max-height: 80vh;
+  max-width: 760px;
+  width: 92vw;
+  max-height: 82vh;
   display: flex;
   flex-direction: column;
-  padding: var(--sg-space-6);
+  padding: var(--sg-space-7);
+  border: 1.5px solid var(--sg-border);
+  text-align: left;
 }
 
 .sg-preview-modal-header {
@@ -1048,13 +1051,19 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--sg-space-4);
-  margin-bottom: var(--sg-space-4);
+  margin-bottom: var(--sg-space-5);
+  text-align: left;
+}
+
+.sg-preview-modal-header .sg-modal-title {
+  text-align: left;
 }
 
 .sg-preview-modal-subtitle {
   font-size: var(--sg-text-sm);
   color: var(--sg-ink-500);
   margin: var(--sg-space-1) 0 0;
+  text-align: left;
 }
 
 .sg-preview-modal-close {
@@ -1080,7 +1089,8 @@
   border: 1px solid var(--sg-border);
   border-radius: var(--sg-radius-md);
   background: #fafbfc;
-  padding: var(--sg-space-5);
+  padding: var(--sg-space-6);
+  text-align: left;
 }
 
 .sg-preview-modal-text {
@@ -1088,8 +1098,9 @@
   font-family: var(--sg-font-ui);
   font-size: var(--sg-text-sm);
   color: var(--sg-navy-900);
-  line-height: 1.7;
+  line-height: 1.75;
   margin: 0;
+  text-align: left;
 }
 
 /* ---- Inline "what is this" info affordance -------------------------------- */

@@ -218,7 +218,7 @@ function ProcurementWizard() {
   // right after picking a template and dropping a file — but doesn't
   // start "analysing" yet. That happens in handleAnalyzeDemo, once the
   // user actually clicks through, so the demo has the same two-step feel
-  // (attach, then analyze) as the real flow instead of jumping straight
+  // (attach, then analyse) as the real flow instead of jumping straight
   // to a progress screen.
   const handleTryDemo = async () => {
     const myToken = ++extractionTokenRef.current;
@@ -246,7 +246,7 @@ function ProcurementWizard() {
     }
   };
 
-  // Phase 2: clicking "Analyze Document" on the ready screen. Runs the
+  // Phase 2: clicking "Analyse Document" on the ready screen. Runs the
   // same cosmetic checklist mechanic as a real upload, timed to
   // DEMO_LOADING_MS, then applies the already-fetched demo fields/values —
   // no second network call needed.
@@ -336,7 +336,7 @@ function ProcurementWizard() {
       ? extractError
         ? "Couldn't read document"
         : isDemoReady
-        ? "Sample ready — click Analyze"
+        ? "Sample ready — click Analyse"
         : isAnalysing
         ? "Analysing document…"
         : "Analysis complete"
@@ -464,7 +464,7 @@ function ProcurementWizard() {
           body={
             "This app turns a plain requirements document (an email, memo, or brief) into a " +
             "signed-ready procurement contract, automatically.\n\n" +
-            "Here's what happens when you click \"Analyze Document\":\n\n" +
+            "Here's what happens when you click \"Analyse Document\":\n\n" +
             "1. The requirements document is read and the AI pulls out the details that belong " +
             "in the contract — names, addresses, dates, pricing, deliverables — using the " +
             "template's placeholder fields as a checklist.\n\n" +
